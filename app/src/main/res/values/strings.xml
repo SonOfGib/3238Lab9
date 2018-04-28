@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">StockViewer</string>
+    <string name="action_settings">Settings</string>
+    <string name="search_hint">stock</string>
+    <string name="empty_search">No stocks found.</string>
+    <string name="empty_list">You have no stocks.</string>
+    <string name="search_result_name">Name</string>
+    <string name="search_result_symbol">Symbol</string>
+    <string name="search_result_exchange">Exchange</string>
+    <string name="price">Stock Price:</string>
+</resources>
