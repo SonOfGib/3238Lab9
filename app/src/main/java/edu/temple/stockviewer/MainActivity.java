@@ -43,7 +43,7 @@ public class MainActivity extends AppCompatActivity implements StockListFragment
         findStocks();
         stockList.setListAdapter(new StockListAdapter(this, stocks));
         mServiceIntent = new Intent(this, StockService.class);
-        startService(mServiceIntent);
+        getApplicationContext().startService(mServiceIntent);
         if(savedInstanceState != null) {
             mSymbol = savedInstanceState.getString(STATE_SYMBOL);
         }

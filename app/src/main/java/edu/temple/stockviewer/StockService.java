@@ -10,6 +10,7 @@ import android.os.HandlerThread;
 import android.os.IBinder;
 import android.os.Looper;
 import android.support.annotation.Nullable;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -29,23 +30,30 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 
-public class StockService extends IntentService {
+public class StockService extends Service {
 
+    public static final String ACTION_STOCK_UPDATED = "edu.temple.stockviewer.ACTION_STOCK_UPDATED";
     HandlerThread thread;
     Handler mHandler;
     ArrayList<String> stocks = new ArrayList<>();
-    public StockService(){
-        super("stockService");
-        //make a handler thread that runs our update code.
+
+    @Override
+    public void onCreate() {
         thread = new HandlerThread("UpdateStocksThread");
         thread.start();
         mHandler = new Handler(thread.getLooper());
-    }
-    @Override
-    protected void onHandleIntent(Intent intent) {
-        //run every 60 seconds
         mHandler.postDelayed(StockRunnable, 60 * 1000);
+    }
 
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return super.onStartCommand(intent, flags, startId);
     }
     final Runnable StockRunnable = new Runnable(){
         public void run(){
@@ -57,6 +65,10 @@ public class StockService extends IntentService {
                 findStockChart(symbol);
                 Log.d("StockServiceUpdate","Updated stock: " + symbol);
             }
+            Intent intent = new Intent();
+            //notify that we have addded a new stock.
+            intent.setAction(ACTION_STOCK_UPDATED);
+            getApplicationContext().sendBroadcast(intent);
             //run every 60 seconds
             mHandler.postDelayed(StockRunnable, 60 * 1000);
         }
