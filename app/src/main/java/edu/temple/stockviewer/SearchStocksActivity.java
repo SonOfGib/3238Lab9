@@ -23,6 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -37,11 +38,11 @@ public class SearchStocksActivity extends ListActivity {
     ListView list;
     ArrayList<StockSearchResult> results = new ArrayList<>();
     ProgressDialog pd;
+    static final String ACTION_STOCK_ADD = "edu.temple.stockviewer.STOCK_ADD";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_search_stocks);
-        Log.d("SEARCH", "HERE");
         list = getListView();
         list.setAdapter(new StockSearchArrayAdapter(this, results));
         handleIntent(getIntent());
@@ -55,10 +56,14 @@ public class SearchStocksActivity extends ListActivity {
         TextView stockSymbolView = v.getRootView().findViewById(R.id.stockSymbol);
         String stockSymbol = stockSymbolView.getText().toString();
         //creates a directory for this stock if we don't already have it.
-        getDir(stockSymbol, Context.MODE_PRIVATE);
+        String dirPath = getFilesDir().getAbsolutePath() + File.separator + stockSymbol;
+        File projDir = new File(dirPath);
+        if (!projDir.exists()) {
+            Log.d("madeStockDir", stockSymbol + " " + projDir.mkdirs());
+        }
         Intent intent = new Intent();
         //notify that we have addded a new stock.
-        intent.setAction("edu.temple.stockviewer.STOCK_ADD");
+        intent.setAction("ACTION_STOCK_ADD");
         intent.putExtra("symbol",stockSymbol);
         LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
         //take us back to the main view.

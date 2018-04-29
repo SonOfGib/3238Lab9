@@ -60,9 +60,12 @@ public class StockDetailsFragment extends Fragment {
             mSymbol = getArguments().getString(ARG_SYMBOL);
         }
         View rootView = inflater.inflate(R.layout.fragment_stock_details, container, false);
+        TextView stock = rootView.findViewById(R.id.stockSymbol);
+        stock.setText(mSymbol);
         return rootView;
     }
 
+    //TODO fetch pic and info from file whenever we receive a broadcast from the service
 
     @Override
     public void onSaveInstanceState(Bundle outstate) {

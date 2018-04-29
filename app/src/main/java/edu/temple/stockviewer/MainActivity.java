@@ -4,6 +4,7 @@ import android.app.SearchManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
@@ -14,27 +15,24 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import java.io.File;
+import java.io.FileFilter;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements StockListFragment.OnFragmentInteractionListener{
     boolean twoPanes;
+    Intent mServiceIntent;
     static final String STATE_SYMBOL = "symbol";
     String mSymbol;
     ArrayList<String> stocks = new ArrayList<>();
-    private BroadcastReceiver receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            Toast.makeText(getApplicationContext(), "received", Toast.LENGTH_SHORT).show();
-            stocks.add(intent.getStringExtra("symbol"));
-        }
-    };
+    StockListFragment stockList = new StockListFragment();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -42,9 +40,10 @@ public class MainActivity extends AppCompatActivity implements StockListFragment
                 onSearchRequested();
             }
         });
-
-
-        
+        findStocks();
+        stockList.setListAdapter(new StockListAdapter(this, stocks));
+        mServiceIntent = new Intent(this, StockService.class);
+        startService(mServiceIntent);
         if(savedInstanceState != null) {
             mSymbol = savedInstanceState.getString(STATE_SYMBOL);
         }
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements StockListFragment
         twoPanes = (findViewById(R.id.stockDetails) != null);
 
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.stockList, new StockListFragment()).commit();
+                .replace(R.id.stockList, stockList).commit();
 
         if (twoPanes){
             StockDetailsFragment newFragment = new StockDetailsFragment();
@@ -72,6 +71,14 @@ public class MainActivity extends AppCompatActivity implements StockListFragment
         }
 
     }
+    @Override
+    public void onResume(){
+        super.onResume();
+        findStocks();
+        ArrayAdapter<String> adapter = (ArrayAdapter<String>) stockList.getListAdapter();
+        adapter.notifyDataSetChanged();
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -104,6 +111,24 @@ public class MainActivity extends AppCompatActivity implements StockListFragment
 
             // Commit the transaction
             transaction.commit();
+        }
+    }
+    /*
+        This function looks for stock symbol directories to determine which stocks have been
+        added so far.
+     */
+    private void findStocks(){
+        File myDirectory = getFilesDir();
+        File[] directories = myDirectory.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return pathname.isDirectory();
+            }
+        });
+        for(File dir: directories){
+            if(!stocks.contains(dir.getName())){
+                stocks.add(dir.getName());
+            }
         }
     }
 
