@@ -3,7 +3,10 @@ package edu.temple.stockviewer;
 import android.app.IntentService;
 import android.app.ProgressDialog;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -12,6 +15,7 @@ import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -36,13 +40,36 @@ public class StockService extends Service {
     HandlerThread thread;
     Handler mHandler;
     ArrayList<String> stocks = new ArrayList<>();
+    BroadcastReceiver receiver;
 
     @Override
     public void onCreate() {
         thread = new HandlerThread("UpdateStocksThread");
         thread.start();
         mHandler = new Handler(thread.getLooper());
-        mHandler.postDelayed(StockRunnable, 60 * 1000);
+        mHandler.post(new StockRunnable(true));
+        final IntentFilter filter = new IntentFilter();
+        filter.addAction(SearchStocksActivity.ACTION_STOCK_ADD);
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                new Thread(){
+                    @Override
+                    public void run() {
+                        new StockRunnable(false).run();
+                    }
+                }.start();
+            }
+        };
+        // Registers the receiver so that your service will listen
+        this.registerReceiver(receiver, filter);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        // Do not forget to unregister the receiver!!!
+        this.unregisterReceiver(receiver);
     }
 
     @Nullable
@@ -55,7 +82,11 @@ public class StockService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         return super.onStartCommand(intent, flags, startId);
     }
-    final Runnable StockRunnable = new Runnable(){
+    private class StockRunnable implements Runnable {
+        private boolean repeat = false;
+        StockRunnable(boolean repeat){
+            this.repeat = repeat;
+        }
         public void run(){
             findStocks();
             for(String symbol: stocks){
@@ -70,7 +101,8 @@ public class StockService extends Service {
             intent.setAction(ACTION_STOCK_UPDATED);
             getApplicationContext().sendBroadcast(intent);
             //run every 60 seconds
-            mHandler.postDelayed(StockRunnable, 60 * 1000);
+            if(repeat)
+                mHandler.postDelayed(this, 60 * 1000);
         }
     };
 
@@ -90,13 +122,13 @@ public class StockService extends Service {
             }
         }
     }
-
     private void findStockInfo(String symbol){
         HttpURLConnection connection = null;
         BufferedReader reader = null;
         String infoResponse = null;
         try {
-            URL url = new URL("http://dev.markitondemand.com/MODApis/Api/v2/Quote/json/?symbol=" + symbol);
+            //using the iextrading api instead of the markitondemand one because the latter is broken for many symbols.
+            URL url = new URL("https://api.iextrading.com/1.0/stock/"+symbol+"/batch?types=quote&range=1d&last=1");
             connection = (HttpURLConnection) url.openConnection();
             connection.connect();
             InputStream stream = connection.getInputStream();

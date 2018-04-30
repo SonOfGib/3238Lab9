@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">StockViewer</string>
+    <string name="search_hint">valores</string>
+    <string name="empty_search">No se encontraron acciones.</string>
+    <string name="empty_list">No tienes acciones.</string>
+    <string name="search_result_name">Nombre</string>
+    <string name="search_result_symbol">Símbolo</string>
+    <string name="search_result_exchange">Bolsa</string>
+    <string name="price">Precio de mercado:</string>
+    <string name="noStock">Sin acciones</string>
+    <string name="noStockPrice">Sin precio</string>
+    <string name="noStockName">Sin nombre</string>
+</resources>

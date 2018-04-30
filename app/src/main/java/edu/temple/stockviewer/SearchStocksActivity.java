@@ -16,9 +16,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -44,7 +46,7 @@ public class SearchStocksActivity extends ListActivity {
     }
 
     public void onListItemClick(ListView l, View v, int position, long id) {
-        TextView stockSymbolView = v.getRootView().findViewById(R.id.stockSymbol);
+        TextView stockSymbolView = v.findViewById(R.id.stockSymbol);
         String stockSymbol = stockSymbolView.getText().toString();
         //creates a directory for this stock if we don't already have it.
         String dirPath = getFilesDir().getAbsolutePath() + File.separator + stockSymbol;
@@ -52,11 +54,10 @@ public class SearchStocksActivity extends ListActivity {
         if (!projDir.exists()) {
             Log.d("madeStockDir", stockSymbol + " " + projDir.mkdirs());
         }
-        Intent intent = new Intent();
+        Intent intent = new Intent(ACTION_STOCK_ADD);
         //notify that we have addded a new stock.
-        intent.setAction("ACTION_STOCK_ADD");
         intent.putExtra("symbol",stockSymbol);
-        LocalBroadcastManager.getInstance(this).sendBroadcast(intent);
+        getApplicationContext().sendBroadcast(intent);
         //take us back to the main view.
         onBackPressed();
     }
@@ -99,11 +100,8 @@ public class SearchStocksActivity extends ListActivity {
                 while ((line = reader.readLine()) != null) {
                     buffer.append(line).append("\n");
                     Log.d("Response: ", "> " + line);   //here u ll get whole response...... :-)
-
                 }
                 return buffer.toString();
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
